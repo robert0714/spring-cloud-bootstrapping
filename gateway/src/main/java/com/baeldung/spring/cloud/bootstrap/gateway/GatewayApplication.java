@@ -69,11 +69,14 @@ public class GatewayApplication {
             @Override
             public void report(Span span) {
                 InstanceInfo instance = eurekaClient.getNextServerFromEureka("zipkin", false);
-                if (!(baseUrl != null && instance.getHomePageUrl().equals(baseUrl))) {
-                    baseUrl = instance.getHomePageUrl();
-                    delegate = new HttpZipkinSpanReporter(baseUrl, zipkinProperties.getFlushInterval(), zipkinProperties.getCompression().isEnabled(), spanMetricReporter);
-                    if (!span.name.matches(skipPattern)) delegate.report(span);
-                }
+				if (!(baseUrl != null && instance.getHomePageUrl().equals(baseUrl))) {
+					baseUrl = instance.getHomePageUrl();
+					int flushInterval = zipkinProperties.getFlushInterval();
+					 
+					delegate = new HttpZipkinSpanReporter(restTemplate(), baseUrl, flushInterval, spanMetricReporter);
+					if (!span.name.matches(skipPattern))
+						delegate.report(span);
+				}
                 if (!span.name.matches(skipPattern)) delegate.report(span);
             }
         };
