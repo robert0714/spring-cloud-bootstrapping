@@ -61,8 +61,9 @@ public class RatingServiceApplication {
                 if (!(baseUrl != null && instance.getHomePageUrl().equals(baseUrl))) {
                     baseUrl = instance.getHomePageUrl();
 					int flushInterval = zipkinProperties.getFlushInterval();
-					 
-					delegate = new HttpZipkinSpanReporter( restTemplate , baseUrl, flushInterval, spanMetricReporter); 
+					final boolean compressionEnabled = zipkinProperties.getCompression().isEnabled();
+					delegate = new HttpZipkinSpanReporter(baseUrl, flushInterval, compressionEnabled,
+							spanMetricReporter);
                     if (!span.name.matches(skipPattern)) delegate.report(span);
                 }
                 if (!span.name.matches(skipPattern)) delegate.report(span);

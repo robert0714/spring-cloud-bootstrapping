@@ -21,45 +21,47 @@ import zipkin.Span;
 @EnableEurekaClient
 public class BookServiceApplication {
 
-    @Autowired
-    private EurekaClient eurekaClient;
-    @Autowired
-    private SpanMetricReporter spanMetricReporter;
-    @Autowired
-    private ZipkinProperties zipkinProperties;
-    @Value("${spring.sleuth.web.skipPattern}")
-    private String skipPattern;
+	@Autowired
+	private EurekaClient eurekaClient;
+	@Autowired
+	private SpanMetricReporter spanMetricReporter;
+	@Autowired
+	private ZipkinProperties zipkinProperties;
+	@Value("${spring.sleuth.web.skipPattern}")
+	private String skipPattern;
 
-    public static void main(String[] args) {
-        SpringApplication.run(BookServiceApplication.class, args);
-    } 
-    
-    @Autowired
-    private RestTemplate restTemplate ;
-    
+	public static void main(String[] args) {
+		SpringApplication.run(BookServiceApplication.class, args);
+	}
 
-    @Bean
-    @LoadBalanced
-    RestTemplate restTemplate() {
-        return new RestTemplate();
-    }
-    
-    @Bean
-    public ZipkinSpanReporter makeZipkinSpanReporter() {
-        return new ZipkinSpanReporter() {
-            private HttpZipkinSpanReporter delegate;
-            private String baseUrl;
+	@Autowired
+	private RestTemplate restTemplate;
 
-            @Override
-            public void report(Span span) {
-                InstanceInfo instance = eurekaClient.getNextServerFromEureka("zipkin", false);
-                if (!(baseUrl != null && instance.getHomePageUrl().equals(baseUrl))) {
-                    baseUrl = instance.getHomePageUrl();
-					int flushInterval = zipkinProperties.getFlushInterval(); 
-					delegate = new HttpZipkinSpanReporter(restTemplate, baseUrl, flushInterval, spanMetricReporter); 
-                    if (!span.name.matches(skipPattern)) delegate.report(span);
-                }
-            }
-        };
-    }
+	@Bean
+	@LoadBalanced
+	RestTemplate restTemplate() {
+		return new RestTemplate();
+	}
+
+	@Bean
+	public ZipkinSpanReporter makeZipkinSpanReporter() {
+		return new ZipkinSpanReporter() {
+			private HttpZipkinSpanReporter delegate;
+			private String baseUrl;
+
+			@Override
+			public void report(Span span) {
+				InstanceInfo instance = eurekaClient.getNextServerFromEureka("zipkin", false);
+				if (!(baseUrl != null && instance.getHomePageUrl().equals(baseUrl))) {
+					baseUrl = instance.getHomePageUrl();
+					final int flushInterval = zipkinProperties.getFlushInterval();
+					final boolean compressionEnabled = zipkinProperties.getCompression().isEnabled();
+					delegate = new HttpZipkinSpanReporter(baseUrl, flushInterval, compressionEnabled,
+							spanMetricReporter);
+					if (!span.name.matches(skipPattern))
+						delegate.report(span);
+				}
+			}
+		};
+	}
 }
