@@ -11,5 +11,6 @@
     - git add .
     - git commit -m "First commit"
   - start the config server
+  - test url  ( http://localhost:8081/book-service/default/master ,http://localhost:8081/discovery/default/master , http://localhost:8888/gateway/default/master, http://localhost:8888/rating-service/default/master , http://localhost:8888/zipkin/default/master ) in browser 
   - start the discover server
   - start all the other servers in any order (gateway, svc-book, svc-rating, zipkin)

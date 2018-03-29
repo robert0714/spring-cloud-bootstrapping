@@ -32,12 +32,18 @@ public class BookServiceApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(BookServiceApplication.class, args);
-    }
+    } 
+    
+    @Autowired
+    private RestTemplate restTemplate ;
+    
+
     @Bean
     @LoadBalanced
     RestTemplate restTemplate() {
         return new RestTemplate();
     }
+    
     @Bean
     public ZipkinSpanReporter makeZipkinSpanReporter() {
         return new ZipkinSpanReporter() {
@@ -49,9 +55,8 @@ public class BookServiceApplication {
                 InstanceInfo instance = eurekaClient.getNextServerFromEureka("zipkin", false);
                 if (!(baseUrl != null && instance.getHomePageUrl().equals(baseUrl))) {
                     baseUrl = instance.getHomePageUrl();
-					int flushInterval = zipkinProperties.getFlushInterval();
-					 
-					delegate = new HttpZipkinSpanReporter(restTemplate(), baseUrl, flushInterval, spanMetricReporter); 
+					int flushInterval = zipkinProperties.getFlushInterval(); 
+					delegate = new HttpZipkinSpanReporter(restTemplate, baseUrl, flushInterval, spanMetricReporter); 
                     if (!span.name.matches(skipPattern)) delegate.report(span);
                 }
             }

@@ -47,6 +47,8 @@ public class RatingServiceApplication {
     RestTemplate restTemplate() {
         return new RestTemplate();
     }
+    @Autowired
+    private RestTemplate restTemplate ;
     @Bean
     public ZipkinSpanReporter makeZipkinSpanReporter() {
         return new ZipkinSpanReporter() {
@@ -60,7 +62,7 @@ public class RatingServiceApplication {
                     baseUrl = instance.getHomePageUrl();
 					int flushInterval = zipkinProperties.getFlushInterval();
 					 
-					delegate = new HttpZipkinSpanReporter(restTemplate(), baseUrl, flushInterval, spanMetricReporter); 
+					delegate = new HttpZipkinSpanReporter( restTemplate , baseUrl, flushInterval, spanMetricReporter); 
                     if (!span.name.matches(skipPattern)) delegate.report(span);
                 }
                 if (!span.name.matches(skipPattern)) delegate.report(span);

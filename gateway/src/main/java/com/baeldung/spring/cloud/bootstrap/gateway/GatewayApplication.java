@@ -52,7 +52,8 @@ public class GatewayApplication {
     RestTemplate restTemplate() {
         return new RestTemplate();
     }
-
+    @Autowired
+    private RestTemplate restTemplate ;
     @Bean
     public SpringClientFactory springClientFactory() {
         SpringClientFactory factory = new SpringClientFactory();
@@ -73,7 +74,7 @@ public class GatewayApplication {
 					baseUrl = instance.getHomePageUrl();
 					int flushInterval = zipkinProperties.getFlushInterval();
 					 
-					delegate = new HttpZipkinSpanReporter(restTemplate(), baseUrl, flushInterval, spanMetricReporter);
+					delegate = new HttpZipkinSpanReporter(restTemplate, baseUrl, flushInterval, spanMetricReporter);
 					if (!span.name.matches(skipPattern))
 						delegate.report(span);
 				}
