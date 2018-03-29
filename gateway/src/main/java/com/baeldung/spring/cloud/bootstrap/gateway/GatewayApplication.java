@@ -1,10 +1,8 @@
 package com.baeldung.spring.cloud.bootstrap.gateway;
 
-import com.baeldung.spring.cloud.bootstrap.gateway.client.book.BooksClient;
-import com.baeldung.spring.cloud.bootstrap.gateway.client.rating.RatingsClient;
-import com.netflix.appinfo.InstanceInfo;
-import com.netflix.discovery.EurekaClient;
-import org.springframework.beans.factory.annotation.Autowired;
+ 
+
+import org.springframework.beans.factory.annotation.Autowired; 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -13,19 +11,14 @@ import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.ribbon.RibbonClientSpecification;
 import org.springframework.cloud.netflix.ribbon.SpringClientFactory;
-import org.springframework.cloud.netflix.zuul.EnableZuulProxy;
-import org.springframework.cloud.sleuth.metric.SpanMetricReporter;
-import org.springframework.cloud.sleuth.zipkin.HttpZipkinSpanReporter;
-import org.springframework.cloud.sleuth.zipkin.ZipkinProperties;
-import org.springframework.cloud.sleuth.zipkin.ZipkinSpanReporter;
+import org.springframework.cloud.netflix.zuul.EnableZuulProxy; 
+import org.springframework.cloud.sleuth.Sampler; 
+import org.springframework.cloud.sleuth.sampler.AlwaysSampler; 
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.FilterType;
 import org.springframework.web.client.RestTemplate;
-import zipkin.Span;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.List; 
 
 @SpringBootApplication
 @EnableZuulProxy
@@ -38,49 +31,26 @@ public class GatewayApplication {
 
     @Autowired(required = false)
     private List<RibbonClientSpecification> configurations = new ArrayList<>();
-    @Autowired
-    private EurekaClient eurekaClient;
-    @Autowired
-    private SpanMetricReporter spanMetricReporter;
-    @Autowired
-    private ZipkinProperties zipkinProperties;
+     
+    
     @Value("${spring.sleuth.web.skipPattern}")
     private String skipPattern;
-
-    @Bean
-    @LoadBalanced
-    RestTemplate restTemplate() {
-        return new RestTemplate();
-    }
-    @Autowired
-    private RestTemplate restTemplate ;
+ 
+    
     @Bean
     public SpringClientFactory springClientFactory() {
         SpringClientFactory factory = new SpringClientFactory();
         factory.setConfigurations(this.configurations);
         return factory;
     }
-
     @Bean
-    public ZipkinSpanReporter makeZipkinSpanReporter() {
-        return new ZipkinSpanReporter() {
-            private HttpZipkinSpanReporter delegate;
-            private String baseUrl;
-
-            @Override
-            public void report(Span span) {
-                InstanceInfo instance = eurekaClient.getNextServerFromEureka("zipkin", false);
-				if (!(baseUrl != null && instance.getHomePageUrl().equals(baseUrl))) {
-					baseUrl = instance.getHomePageUrl();
-					final int flushInterval = zipkinProperties.getFlushInterval();
-					final boolean compressionEnabled = zipkinProperties.getCompression().isEnabled();
-					delegate = new HttpZipkinSpanReporter(baseUrl, flushInterval, compressionEnabled,
-							spanMetricReporter);
-					if (!span.name.matches(skipPattern))
-						delegate.report(span);
-				}
-                if (!span.name.matches(skipPattern)) delegate.report(span);
-            }
-        };
+    public Sampler defaultSampler() {
+    	return new AlwaysSampler();
+    }
+     
+    @Bean
+    @LoadBalanced
+    RestTemplate restTemplate() {
+        return new RestTemplate();
     }
 }
